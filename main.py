@@ -25,14 +25,12 @@ pipeSpeed = 5
 # clock
 clock = pygame.time.Clock()
 
-# images
+# assets
 pipeImg = pygame.transform.scale(pygame.image.load(os.path.join("assets","pipe.png")), (pipeWidth, pipeHeight))
 pipeImgFlipped = pygame.transform.flip(pipeImg, False, True)
 backgroundImg = pygame.transform.scale(pygame.image.load(os.path.join("assets","background.png")), (windowWidth, windowHeight))
 birdImg = pygame.transform.scale(pygame.image.load(os.path.join("assets","bird.png")), (birdWidth, birdHeight))
 baseImg = pygame.image.load(os.path.join("assets","base.png"))
-
-# fonts
 pygame.font.init()
 font = pygame.font.SysFont("comicsans", 50)
 
@@ -58,11 +56,8 @@ class pipe:
 def renderScore(score):
     score_label = font.render("Score: " + str(score),1,(255,255,255))
     screen.blit(score_label, (10, 10))
-    highScoreLabel = font.render("High Score: "+str(highScore),1,(255,255,255))
-    screen.blit(highScoreLabel, (10, 50))
 
 running = True
-started = True
 
 # main running loop
 while running:
@@ -72,15 +67,6 @@ while running:
     pipes.append(pipe(randint(pipeGap + 50,windowHeight-200),windowWidth))
 
     playing = True
-    pause = True # this is telling to pause until space is pressed to start the game again. is true when started and after every death
-
-    if started == False:
-        if score > highScore:
-            highScore = score
-            pickle.dump(highScore, open("highscore.dat", "wb"))
-    else:
-        highScore = pickle.load(open("highscore.dat", "rb"))
-
     score = 0
 
     # when the player is in the game (ie not lost or on the starting screen)
@@ -112,7 +98,7 @@ while running:
         if b1.y > 800 - birdHeight:
             playing = False
 
-        # if the forwardmost pipe is off screen then delete
+        # when the pipe is far enough along then append a new one
         if pipes[len(pipes)-1].x < windowWidth - 200:
             pipes.append(pipe(randint(pipeGap + 50,windowHeight-200),windowWidth))
 
@@ -134,51 +120,12 @@ while running:
             # when off screen delete
             if i.x < 0 - pipeWidth:
                 pipes.remove(pipes[0])
-            
-            # adds to score once pipe is passed, only if it has not yet been scored
-            if not i.pointScored and i.x + pipeWidth < birdX:
-                i.pointScored = True
-                score += 1
 
         # bird onto screen
         screen.blit(birdImg,(b1.x,b1.y))
-
+        score += 1
         renderScore(score)
 
-        # make sure timing is right
+        # display
         clock.tick(gameSpeed)
-
-        # final update to the screen
         pygame.display.update()
-
-        # the game is paused at the start screen
-        while pause:
-
-            # instruction label
-            if started == False:
-                lostLabel = font.render("Space to try again",1,(255,255,255))
-                screen.blit(lostLabel, (10, 90))
-            else:
-                lostLabel = font.render("Space to start",1,(255,255,255))
-                screen.blit(lostLabel, (10, 100))
-
-            # display stufz
-            clock.tick(gameSpeed)
-            pygame.display.update()
-
-            events = pygame.event.get()
-            for event in events:
-            # if x button pressed stop
-                if event.type == pygame.QUIT:
-                    running = False
-                    pause = False
-                    playing = False
-                # if key is pressed
-                if event.type == pygame.KEYDOWN:
-                    # if space is pressed
-                    if event.key == pygame.K_SPACE or event.key == pygame.K_UP:
-                        pause = False
-                        started = False
-                    if event.key == pygame.K_DOWN:
-                        easterEgg = font.render("uwu <3",1,(255,255,255))
-                        screen.blit(easterEgg,(10, windowHeight - 50))
