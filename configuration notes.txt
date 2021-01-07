@@ -1,0 +1,20 @@
+inputs
+    bird y
+    bottom pipe y
+    distance
+
+outputs
+    jump?
+
+activation function
+    tanh (tells weather or not to jump)
+    > 0.5
+
+population size
+    50
+
+fitness function
+    score / distance
+
+max generations
+    30
