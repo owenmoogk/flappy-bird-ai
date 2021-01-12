@@ -5,6 +5,7 @@
 # imports
 import pygame, random, os, time, sys, pickle
 from random import randint
+import neat
 
 # pygame settings
 windowWidth = 600
@@ -44,6 +45,20 @@ class bird:
         self.x = x
         self.y = y
         self.ySpeed = 0
+    def jump(self):
+        self.ySpeed = 0-jumpPower
+        self.tick_count = 0
+        self.height = self.y
+    def gravity(self):
+        self.ySpeed += gravity
+        self.y += ySpeed
+    def topBottomCollision(self):
+        playing = True
+        if self.y < 0:
+            playing = False
+        if self.y > windowHeight - birdHeight:
+            playing = False
+        return(playing)
 
 # pipe class
 class pipe:
@@ -57,11 +72,20 @@ def renderScore(score):
     score_label = font.render("Score: " + str(score),1,(255,255,255))
     screen.blit(score_label, (10, 10))
 
-running = True
+def eval_genomes(genomes,config):
+    
+    # configuring all the birds and their data
+    ge = []
+    birds = []
+    nets = []
+    for g in genomes:
+        net = neat.nn.FeedForwardNetwork(g,config)
+        nets.append(net)
+        birds.append(bird(230, 350))
+        g.fitness = 0
+        ge.append(g)
 
-# main running loop
-while running:
-    b1 = bird(birdX,windowHeight/2-100)
+
 
     pipes = []
     pipes.append(pipe(randint(pipeGap + 50,windowHeight-200),windowWidth))
@@ -78,40 +102,26 @@ while running:
             if event.type == pygame.QUIT:
                 running = False
                 playing = False
-            # if key is pressed
-            if event.type == pygame.KEYDOWN:
-                # if space is pressed
-                if event.key == pygame.K_SPACE or event.key == pygame.K_UP:
-                    b1.ySpeed = 0-jumpPower
 
         # background
         screen.blit(backgroundImg,(0,0))
 
-        # adjusting the y speed of the bird
-        b1.ySpeed += gravity
-        # moving the bird y
-        b1.y += b1.ySpeed
-
-        # y collision detection
-        if b1.y < 0:
-            playing = False
-        if b1.y > 800 - birdHeight:
-            playing = False
+        for bird in birds:
+            bird.gravity()
+            playing = bird.topBottomCollision()
 
         # when the pipe is far enough along then append a new one
         if pipes[len(pipes)-1].x < windowWidth - 200:
             pipes.append(pipe(randint(pipeGap + 50,windowHeight-200),windowWidth))
 
-
         # loop thru pipes
-        for i in pipes:
-
+        for pipe in pipes:
+            for bird in birds:
+                # collision detection
+                if pipe.x < bird.x + birdWidth and pipe.x + pipeWidth > bird.x and (pipe.yBottom < bird.y + birdHeight or pipe.yBottom - pipeGap > bird.y): # checking if the pipe x overlaps with the bird x
+                    playing = False
             # move pipes
             i.x -= pipeSpeed
-
-            # collision detection
-            if i.x < b1.x + birdWidth and i.x + pipeWidth > b1.x and (i.yBottom < b1.y + birdHeight or i.yBottom - pipeGap > b1.y): # checking if the pipe x overlaps with the bird x
-                playing = False
             
             # blit images
             screen.blit(pipeImg,(i.x,i.yBottom))
@@ -129,3 +139,18 @@ while running:
         # display
         clock.tick(gameSpeed)
         pygame.display.update()
+
+def run(config_path):
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+
+    population = neat.Population(config)
+    population.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    population.add_reporter(stats)
+
+    winner = population.run(eval_genomes, 50)
+
+if __name__ == "__main__":
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, "neat-config.txt")
+    run(config_path)
