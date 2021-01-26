@@ -1,6 +1,7 @@
 inputs
     bird y
     bottom pipe y
+    top pipe y
     distance
 
 outputs
@@ -11,7 +12,7 @@ activation function
     > 0.5
 
 population size
-    50
+    1000
 
 fitness function
     score / distance
