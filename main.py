@@ -92,8 +92,6 @@ class Pipe:
         return False
 
 def draw_window(birds, pipes, score, gen, pipe_ind):
-    if gen == 0:
-        gen = 1
     screen.blit(backgroundImg, (0,0))
 
     for pipe in pipes:
@@ -113,7 +111,7 @@ def draw_window(birds, pipes, score, gen, pipe_ind):
     screen.blit(score_label, (windowWidth - score_label.get_width() - 15, 10))
 
     # generations label
-    score_label = myFont.render("Gens: " + str(gen-1),1,(255,255,255))
+    score_label = myFont.render("Gens: " + str(gen),1,(255,255,255))
     screen.blit(score_label, (10, 10))
 
     # alive label
